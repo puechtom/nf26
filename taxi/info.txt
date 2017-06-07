@@ -13,7 +13,7 @@ TAXI_ID: (integer): It contains a unique identifier for the taxi driver that per
 
 TIMESTAMP: (integer) Unix Timestamp (in seconds). It identifies the trip's start;
 
-DAYTYPE: (char) It identifies the daytype of the trip's start. It assumes one of three possible values:
+DAY_TYPE: (char) It identifies the daytype of the trip's start. It assumes one of three possible values:
 - 'B' if this trip started on a holiday or any other special day (i.e. extending holidays, floating holidays, etc.);
 - 'C' if the trip started on a day before a type-B day;
 - 'A' otherwise (i.e. a normal day, workday or weekend).
