@@ -33,17 +33,15 @@ day_type_B = [
     date(2014, 4, 20),
     date(2014, 4, 25),
     date(2014, 5, 1),
-    date(2014, 5, 4),
     date(2014, 6, 10),
     date(2013, 8, 15),
-    date(2013, 12, 1),
     date(2013, 12, 8),
     date(2013, 12, 25)
 ]
 
 day_type_C = []
 for day in day_type_B:
-    day_type_C.append(day + timedelta(days=1))
+    day_type_C.append(day - timedelta(days=1))
 
 def dist(polyline):
     dists = []
@@ -129,7 +127,7 @@ if __name__ == "__main__":
         # 'MISSING_DATA',
         # 'POLYLINE']
         for i, row in enumerate(reader):
-            print_progress(i, row_count, bar_length=50)
+            if i%5000==0: print_progress(i, row_count, bar_length=50)
             values = dict()
             values["tripId"] = row[0]
             values["callType"] = row[1]
