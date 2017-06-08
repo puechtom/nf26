@@ -44,21 +44,32 @@ def create_call():
 
 def create_fact():
     query = """CREATE TABLE fact(
-            fk_call double,
-            fk_date double,
-            fk_taxi double,
-            fk_latitude double,
-            fk_longitude doulbe,
-            distance double,
-            PRIMARY KEY(timestamp, year, month, day, hour, dateType));"""
+            trip_id double,
+            call_type varchar,
+            origin_call int,
+            origin_stand int,
+            taxi_id int,
+            timestamp int,
+            year int,
+            month int,
+            hour int,
+            season varchar,
+            weekday int,
+            day_type varchar,
+            missing_data boolean,
+            polyline varchar,
+            start_loc varchar,
+            end_loc varchar,
+            distance float,
+            PRIMARY KEY(trip_id));"""
     session.execute(query)
 
 def main():
-    create_date()
-    create_location()
-    create_taxi()
-    create_call()
-    # create_fact()
+    # create_date()
+    # create_location()
+    # create_taxi()
+    # create_call()
+    create_fact()
 
 if __name__ == "__main__":
     main()

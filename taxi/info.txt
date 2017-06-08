@@ -40,3 +40,16 @@ Faits :
 - les types d'appels les plus fréquents
 - lieu début
 - lieu fin
+
+# print headers
+        #['TRIP_ID', 0
+        # 'CALL_TYPE', 1
+        # 'ORIGIN_CALL', 2
+        # 'ORIGIN_STAND', 3
+        # 'TAXI_ID', 4
+        # 'TIMESTAMP', 5
+        # 'DAY_TYPE', 6
+        # 'MISSING_DATA', 7
+        # 'POLYLINE'] 8
+
+scp -r /mnt/c/Users/tompu/dev/nf26/taxi/script e35@nf26.leger.tf:/home/e35

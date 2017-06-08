@@ -5,6 +5,7 @@ from geopy.distance import vincenty
 import csv
 import ast
 from datetime import date, time, datetime, timedelta
+import pprint
 
 def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_length=100):
     """
@@ -43,105 +44,148 @@ day_type_C = []
 for day in day_type_B:
     day_type_C.append(day - timedelta(days=1))
 
-def dist(polyline):
+Y = 2000 # dummy
+seasons = [('winter', (date(Y,  1,  1),  date(Y,  3, 20))),
+           ('spring', (date(Y,  3, 21),  date(Y,  6, 20))),
+           ('summer', (date(Y,  6, 21),  date(Y,  9, 22))),
+           ('autumn', (date(Y,  9, 23),  date(Y, 12, 20))),
+           ('winter', (date(Y, 12, 21),  date(Y, 12, 31)))]
+
+def get_season(now):
+    now = now.replace(year=Y)
+    return next(season for season, (start, end) in seasons
+                if start <= now <= end)
+
+def dist(polyline): # as list
     dists = []
-    polyline = ast.literal_eval(polyline)
     for elt1, elt2 in zip(polyline, polyline[1::]):
         dists.append(vincenty(elt1, elt2).meters)
     return sum(dists)
 
+def init_dico(row):
+    values = dict()
+    values["trip_id"] = row[0]
+    values["call_type"] = row[1]
+    values["origin_call"] = row[2]
+    values["origin_stand"] = row[3]
+    values["taxi_id"] = row[4]
+    values["timestamp"] = row[5]
+    values["day_type"] = row[6]
+    values["missing_data"] = row[7]
+    values["polyline"] = row[8]
+    return values
+
 def verif(values):
-    # verif tripId
-    if not values["tripId"]:
+    # verif trip_id
+    if not values["trip_id"]:
         raise ValueError("error TRIP_ID")
 
-    # verif callType
-    if not values["callType"] in ['A', 'B', 'C']:
-        if values["originCall"]:
-            print "WARNING: CALL_TYPE auto set to A"
-            values["callType"] = 'A'
-        elif values["originStand"]:
-            print "WARNING: CALL_TYPE set to B"
-            values["callType"] = 'B'
+    # verif call_type
+    if not values["call_type"] in ['A', 'B', 'C']:
+        if values["origin_call"]:
+            print ("WARNING: CALL_TYPE auto set to A")
+            values["call_type"] = 'A'
+        elif values["origin_stand"]:
+            print ("WARNING: CALL_TYPE set to B")
+            values["call_type"] = 'B'
         else:
             raise ValueError("error CALL_TYPE")
 
-    # verif originCall
-    if not values["originCall"]:
-        if values["callType"] == 'A':
+    # verif origin_call
+    if not values["origin_call"]:
+        if values["call_type"] == 'A':
             # print "WARNING: CALL_TYPE set to C due to missing ORIGIN_CALL data"
-            values["callType"] = 'C'
+            values["call_type"] = 'C'
     else:
-        if values["callType"] != 'A':
-            print "WARNING: CALL_TYPE set to A due to ORIGIN_CALL data"
-            values["callType"] = 'A'
+        if values["call_type"] != 'A':
+            print ("WARNING: CALL_TYPE set to A due to ORIGIN_CALL data")
+            values["call_type"] = 'A'
 
-    # verif originStand
-    if not values["originStand"]:    
-        if values["callType"] == 'B':
+    # verif origin_stand
+    if not values["origin_stand"]:    
+        if values["call_type"] == 'B':
             # print "WARNING: CALL_TYPE set to C due to missing ORIGIN_STAND data"
-            values["callType"] = 'C'
+            values["call_type"] = 'C'
     else:
-        if values["callType"] != 'B':
+        if values["call_type"] != 'B':
             # print "WARNING: CALL_TYPE set to B due to ORIGIN_STAND data"
-            values["callType"] = 'B'
+            values["call_type"] = 'B'
 
-    # verif taxiId
-    if not values["taxiId"]:
+    # verif taxi_id
+    if not values["taxi_id"]:
         raise ValueError("error TAXI_ID")
 
     # verif timestamp
-    values["timestamp"] = date.fromtimestamp(int(values["timestamp"]))
+    dummy = date.fromtimestamp(int(values["timestamp"]))
+    if not isinstance(dummy, date):
+        raise ValueError("error TIMESTAMP")
 
-    # verif dayType
+    # verif day_type
     if values["timestamp"] in day_type_B:
-        values["dayType"] = 'B'
+        values["day_type"] = 'B'
     elif values["timestamp"] in day_type_C:
-        values["dayType"] = 'C'
+        values["day_type"] = 'C'
     else:
-        values["dayType"] = 'A'
+        values["day_type"] = 'A'
 
-    # verif missingData
+    # verif missing_data
     if not values["polyline"]:
-        values["missingData"] = True
+        values["missing_data"] = True
     else:
-        values["missingData"] = False
+        values["missing_data"] = False
+
+    return values
+
+
+def addFacts(values):
+    # Date
+    date_value = date.fromtimestamp(int(values["timestamp"]))
+    # year
+    values["year"] = date_value.year
+    # month
+    values["month"] = date_value.month
+    # day
+    values["day"] = date_value.day
+    # season
+    values["season"] = get_season(date_value)
+    # weekday
+    values["weekday"] = date_value.weekday()
+
+    if not values["missing_data"]:
+        # Location
+        polyline = ast.literal_eval(values["polyline"])
+        # stat_loc
+        values["start_loc"] = polyline[0]
+        # end_loc
+        values["end_loc"] = polyline[-1]
+        # distance
+        values["distance"] = dist(polyline)
+
+    return values
+
 
 if __name__ == "__main__":
-
     with open("/train.csv") as f:
-        print "Reading CSV..."
+        print ("Reading CSV...")
         reader = csv.reader(f, delimiter=',', quotechar='"')
         row_count = sum(1 for row in reader)
-        print str(row_count) + " rows read"
+        print (str(row_count) + " rows read")
         f.seek(0)
         headers = next(reader)
-        print headers
-        #['TRIP_ID',
-        # 'CALL_TYPE',
-        # 'ORIGIN_CALL',
-        # 'ORIGIN_STAND',
-        # 'TAXI_ID',
-        # 'TIMESTAMP',
-        # 'DAY_TYPE',
-        # 'MISSING_DATA',
-        # 'POLYLINE']
         step = int(row_count/100)
         for i, row in enumerate(reader):
             if i%step==0: print_progress(i, row_count, bar_length=50)
-            values = dict()
-            values["tripId"] = row[0]
-            values["callType"] = row[1]
-            values["originCall"] = row[2]
-            values["originStand"] = row[3]
-            values["taxiId"] = row[4]
-            values["timestamp"] = row[5]
-            values["dayType"] = row[6]
-            values["missingData"] = row[7]
-            values["polyline"] = row[8]
+            values = init_dico(row)
+            # print ("ROW :")
+            # pprint.pprint(values)
             try:
                 values = verif(values)
+                values = addFacts(values)
+                # print ("FACT :")
+                # pprint.pprint(values)
             except Exception as e:
-                print str(i) + " : " + e
-
-# scp -r /mnt/c/Users/tompu/dev/nf26/taxi/script e35@nf26.leger.tf:/home/e35
+                print ("ERROR: exception occured for row " + str(i))
+                print (e)
+                print ("\n")
+            
+# 1372735384
