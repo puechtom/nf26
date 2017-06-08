@@ -23,7 +23,7 @@ def print_progress(iteration, total, prefix='', suffix='', decimals=1, bar_lengt
     filled_length = int(round(bar_length * iteration / float(total)))
     bar = '█' * filled_length + '-' * (bar_length - filled_length)
 
-    print('\r%s |%s| %s%s %s' % (prefix, bar, percents, '%', suffix)),
+    print("\r%s |%s| %s%s %s" % (prefix, bar, percents, '%', suffix)),
 
     if iteration == total:
         print('\n')
@@ -115,10 +115,10 @@ def verif(values):
     if not values["taxi_id"]:
         raise ValueError("error TAXI_ID")
 
-    # verif timestamp
-    dummy = date.fromtimestamp(int(values["timestamp"]))
-    if not isinstance(dummy, date):
-        raise ValueError("error TIMESTAMP")
+    # # verif timestamp
+    # dummy = date.fromtimestamp(int(values["timestamp"]))
+    # if not isinstance(dummy, date):
+    #     raise ValueError("error TIMESTAMP")
 
     # verif day_type
     if values["timestamp"] in day_type_B:
@@ -129,7 +129,10 @@ def verif(values):
         values["day_type"] = 'A'
 
     # verif missing_data
-    if not values["polyline"]:
+    values["polyline"] = ast.literal_eval(values["polyline"])
+
+    # verif missing_data
+    if len(values["polyline"]) < 2:
         values["missing_data"] = True
     else:
         values["missing_data"] = False
@@ -151,21 +154,20 @@ def addFacts(values):
     # weekday
     values["weekday"] = date_value.weekday()
 
-    if not values["missing_data"]:
-        # Location
-        polyline = ast.literal_eval(values["polyline"])
+    # Location
+    if not values["missing_data"]:     
         # stat_loc
-        values["start_loc"] = polyline[0]
+        values["start_loc"] = values["polyline"][0]
         # end_loc
-        values["end_loc"] = polyline[-1]
+        values["end_loc"] = values["polyline"][-1]
         # distance
-        values["distance"] = dist(polyline)
+        values["distance"] = dist(values["polyline"])
 
     return values
 
 
 if __name__ == "__main__":
-    with open("/train.csv") as f:
+    with open("../data/train.csv") as f:
         print ("Reading CSV...")
         reader = csv.reader(f, delimiter=',', quotechar='"')
         row_count = sum(1 for row in reader)
@@ -174,15 +176,15 @@ if __name__ == "__main__":
         headers = next(reader)
         step = int(row_count/100)
         for i, row in enumerate(reader):
-            if i%step==0: print_progress(i, row_count, bar_length=50)
+            if i < 10 or i%step==0: print_progress(i, row_count, bar_length=50)
             values = init_dico(row)
-            # print ("ROW :")
-            # pprint.pprint(values)
+            print ("ROW :")
+            pprint.pprint(values)
             try:
                 values = verif(values)
                 values = addFacts(values)
-                # print ("FACT :")
-                # pprint.pprint(values)
+                print ("FACT :")
+                pprint.pprint(values)
             except Exception as e:
                 print ("ERROR: exception occured for row " + str(i))
                 print (e)
