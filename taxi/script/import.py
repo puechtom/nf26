@@ -109,7 +109,7 @@ def verif(values):
 
 if __name__ == "__main__":
 
-    with open("../data/train.csv") as f:
+    with open("/train.csv") as f:
         print "Reading CSV..."
         reader = csv.reader(f, delimiter=',', quotechar='"')
         row_count = sum(1 for row in reader)
@@ -126,8 +126,9 @@ if __name__ == "__main__":
         # 'DAY_TYPE',
         # 'MISSING_DATA',
         # 'POLYLINE']
+        step = int(row_count/100)
         for i, row in enumerate(reader):
-            if i%5000==0: print_progress(i, row_count, bar_length=50)
+            if i%step==0: print_progress(i, row_count, bar_length=50)
             values = dict()
             values["tripId"] = row[0]
             values["callType"] = row[1]
@@ -142,3 +143,5 @@ if __name__ == "__main__":
                 values = verif(values)
             except Exception as e:
                 print str(i) + " : " + e
+
+# scp -r /mnt/c/Users/tompu/dev/nf26/taxi/script e35@nf26.leger.tf:/home/e35

@@ -38,3 +38,5 @@ Faits :
 - localisation fréquente
 - période fréquente
 - les types d'appels les plus fréquents
+- lieu début
+- lieu fin
