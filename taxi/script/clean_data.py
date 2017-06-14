@@ -6,11 +6,11 @@ import csv
 import ast
 from datetime import date, time, datetime, timedelta
 import pprint
-from cassandra.cluster import Cluster
-from cassandra.query import BatchStatement
+# from cassandra.cluster import Cluster
+# from cassandra.query import BatchStatement
 
-cluster = Cluster()
-session = cluster.connect("e35_taxi")
+# cluster = Cluster()
+# session = cluster.connect("e35_taxi")
 
 BATCH_SIZE = 500
 
@@ -193,87 +193,29 @@ def addFacts(values):
 
 
 if __name__ == "__main__":
-    with open("/train.csv") as f:
+    with open("../data/train.csv") as f, open("../data/train_clean.csv", "w") as fout:
         print ("Reading CSV...")
         reader = csv.reader(f, delimiter=',', quotechar='"')
         row_count = sum(1 for row in reader)
         print (str(row_count) + " rows read")
         f.seek(0)
         headers = next(reader)
-        # step = int(row_count/10)
-        n=0
-        batch = BatchStatement()
+        step = int(row_count/1000)
         for i, row in enumerate(reader):
-            # if i > 10 : exit(0)
-            # if i < 10 or i%step==0: print_progress(i, row_count, bar_length=50)
+            if i < 10 or i%step==0: print_progress(i, row_count, bar_length=50)
             values = init_dico(row)
-            # print ("ROW :")
-            # pprint.pprint(values)
             try:
                 values = verif(values)
                 values = addFacts(values)
-                query = ("INSERT INTO start_date("
-                    + "trip_id,"
-                    # + "call_type,"
-                    # + "origin_call,"
-                    # + "origin_stand,"
-                    + "taxi_id,"
-                    # + "timestamp,"
-                    # + "year,"
-                    # + "month,"
-                    # + "day,"
-                    + "hour,"
-                    + "minute,"
-                    # + "season,"
-                    + "weekday,"
-                    # + "day_type,"
-                    # + "missing_data,"
-                    # + "polyline,"
-                    + "start_loc_long,"
-                    + "start_loc_lat,"
-                    # + "end_loc_long,"
-                    # + "end_loc_lat,"
-                    + "distance) VALUES("
-                    + str(values["trip_id"]) + ", "
-                    # + "'" + str(values["call_type"]) + "'" + ", "
-                    # + str(values["origin_call"])  + ", "
-                    # + str(values["origin_stand"]) + ", "
-                    + str(values["taxi_id"]) + ", "
-                    # + str(values["timestamp"]) + ", "
-                    # + str(values["year"]) + ", "
-                    # + str(values["month"]) + ", "
-                    # + str(values["day"]) + ", "
-                    + str(values["hour"]) + ", "
-                    + str(values["minute"]) + ", "
-                    # + "'" + str(values["season"]) + "'" + ", "
-                    + str(values["weekday"]) + ", "
-                    # + "'" + str(values["day_type"]) + "'" + ", "
-                    # + str(values["missing_data"]) + ", "
-                    # + "'" + str(values["polyline"]) + "'" + ", "
-                    + str(values["start_loc_long"]) + ", "
-                    + str(values["start_loc_lat"]) + ", "
-                    # + str(values["end_loc_long"]) + ", "
-                    # + str(values["end_loc_lat"]) + ", "
-                    + str(values["distance"]) + ")")
-                
-                if n%BATCH_SIZE == 0:
-                    # print("BATCH EXECUTED ####################################")
-                    n=1
-                    print("Executing batch...")
-                    session.execute(batch)
-                    batch = BatchStatement()
-                    print("Batch executed")
-                    print("Row ", i)
-                else:
-                    # print(n)
-                    n+=1
-                    batch.add(query)
+                if i == 0: 
+                    writer = csv.DictWriter(fout, 
+                        fieldnames=list(values.keys()), 
+                        delimiter=',',
+                        quotechar='"',
+                        quoting=csv.QUOTE_ALL)
+                    writer.writeheader()
+                writer.writerow(values)
 
-                # pprint.pprint(query)
-                # print (query)
-                # session.execute(query)
-                # print ("FACT :")
-                # pprint.pprint(values)
             except Exception as e:
                 if str(e) == "polyline missing_data" :
                     pass
@@ -281,50 +223,3 @@ if __name__ == "__main__":
                     print ("ERROR: exception occured for row " + str(i))
                     print (e)
                     print ("\n")
-                # continue
-            
-# 1372735384
-
-# query = ("INSERT INTO start_dist("
-#                     + "trip_id,"
-#                     + "call_type,"
-#                     + "origin_call,"
-#                     + "origin_stand,"
-#                     + "taxi_id,"
-#                     + "timestamp,"
-#                     + "year,"
-#                     + "month,"
-#                     + "day,"
-#                     + "hour,"
-#                     + "minute,"
-#                     + "season,"
-#                     + "weekday,"
-#                     + "day_type,"
-#                     + "missing_data,"
-#                     + "polyline,"
-#                     + "start_loc_long,"
-#                     + "start_loc_lat,"
-#                     + "end_loc_long,"
-#                     + "end_loc_lat,"
-#                     + "distance) VALUES("
-#                     + str(values["trip_id"]) + ", "
-#                     + "'" + str(values["call_type"]) + "'" + ", "
-#                     + str(values["origin_call"])  + ", "
-#                     + str(values["origin_stand"]) + ", "
-#                     + str(values["taxi_id"]) + ", "
-#                     + str(values["timestamp"]) + ", "
-#                     + str(values["year"]) + ", "
-#                     + str(values["month"]) + ", "
-#                     + str(values["day"]) + ", "
-#                     + str(values["hour"]) + ", "
-#                     + str(values["minute"]) + ", "
-#                     + "'" + str(values["season"]) + "'" + ", "
-#                     + str(values["weekday"]) + ", "
-#                     + "'" + str(values["day_type"]) + "'" + ", "
-#                     + str(values["missing_data"]) + ", "
-#                     + "'" + str(values["polyline"]) + "'" + ", "
-#                     + str(values["start_loc_long"]) + ", "
-#                     + str(values["start_loc_lat"]) + ", "
-#                     + str(values["end_loc_long"]) + ", "
-#                     + str(values["end_loc_lat"]) + ", "
-#                     + str(values["distance"]) + ");")
