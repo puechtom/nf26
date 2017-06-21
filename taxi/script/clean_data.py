@@ -6,11 +6,11 @@ import csv
 import ast
 from datetime import date, time, datetime, timedelta
 import pprint
-# from cassandra.cluster import Cluster
-# from cassandra.query import BatchStatement
+from cassandra.cluster import Cluster
+from cassandra.query import BatchStatement
 
-# cluster = Cluster()
-# session = cluster.connect("e35_taxi")
+cluster = Cluster()
+session = cluster.connect("e35_taxi")
 
 BATCH_SIZE = 500
 

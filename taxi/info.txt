@@ -53,3 +53,7 @@ Faits :
         # 'POLYLINE'] 8
 
 scp -r /mnt/c/Users/tompu/dev/nf26/taxi/script e35@nf26.leger.tf:/home/e35
+
+scp /mnt/c/Users/tompu/dev/nf26/taxi/data/train_clean.csv e35@nf26.leger.tf:/home/e35/data
+
+scp e35@nf26.leger.tf:/home/e35/script/barplot_start_distance.png /mnt/c/Users/tompu/dev/nf26/taxi/images
